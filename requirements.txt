@@ -1,0 +1,4 @@
+google-generativeai
+gitpython
+rich
+python-dotenv
