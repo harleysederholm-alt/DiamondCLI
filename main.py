@@ -46,6 +46,23 @@ def scan_repositories():
             
             console.print(f"Checked out branch: {branch_name}")
 
+            files_changed = False
+
+            # Propagate CI/CD Workflow
+            workflow_src = Path(".github/workflows/diamond_guard.yml")
+            if workflow_src.exists():
+                workflow_dest_dir = repo_path / ".github" / "workflows"
+                workflow_dest_dir.mkdir(parents=True, exist_ok=True)
+                workflow_dest = workflow_dest_dir / "diamond_guard.yml"
+                workflow_content = workflow_src.read_text(encoding="utf-8")
+                
+                # Check if file needs update
+                if not workflow_dest.exists() or workflow_dest.read_text(encoding="utf-8") != workflow_content:
+                    workflow_dest.write_text(workflow_content, encoding="utf-8")
+                    repo.index.add([str(workflow_dest.absolute())])
+                    files_changed = True
+                    console.print("[cyan]Propagated CI/CD workflow.[/cyan]")
+
             # Collect source files
             files_to_refactor = []
             extensions = [".ts", ".tsx", ".py"]
@@ -68,7 +85,7 @@ def scan_repositories():
                 repo.heads[original_branch.name].checkout()
                 continue
 
-            files_changed = False
+            # files_changed already initialized
             
             # Loop through source files
             for file_path in track(filtered_files, description=f"Refactoring {repo_path.name}"):
